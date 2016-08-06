@@ -1,0 +1,21 @@
+<Context>
+
+  <Resource name="jdbc/sqlite" 
+  			type="javax.sql.DataSource"
+               maxActive="20" maxIdle="5" maxWait="10000"
+               driverClassName="org.sqlite.JDBC"
+               url="jdbc:sqlite:/Users/dty/Documents/My-Training/jsp-servlet-jdbc-source-code/user-sqlitedb-project/WebContent/person_db.sqlite"/>
+
+</Context>
+
+<!-- <Context>
+
+  <Resource name="jdbc/web_user_tracker" 
+  			auth="Container" type="javax.sql.DataSource"
+               maxActive="20" maxIdle="5" maxWait="10000"
+               username="webstudent" password="webstudent" 
+               driverClassName="com.mysql.jdbc.Driver"
+               url="jdbc:mysql://localhost:3306/web_user_tracker?useSSL=false"/>
+
+</Context>
+ -->
