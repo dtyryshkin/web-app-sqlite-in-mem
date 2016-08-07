@@ -3,12 +3,13 @@
 
 <head>
 	<title>Add User</title>
+	<link rel="stylesheet" type="text/css" href="css/user-style.css">
 </head>
 
 <body>
 	<div id="wrapper">
 		<div id="header">
-			<h2>DT Users</h2>
+			<h2>Add User</h2>
 		</div>
 	</div>
 	
@@ -48,7 +49,7 @@
 		<div style="clear: both;"></div>
 		
 		<p>
-			<a href="UserControllerServlet">Back to Homepage</a>
+			<a href="UserControllerServlet">Back to List</a>
 		</p>
 	</div>
 </body>

@@ -1,4 +1,5 @@
 package com.dimitrit.web.demo;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -7,98 +8,108 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import com.dimitrit.web.demo.Person;
-import javax.sql.DataSource;
+
+/**
+ * UserDbUtil - Abstracts DataBase operation.
+ */
 
 public class UserDbUtil {
+	// SQLite DB, in memory mode, named inMemoryDb.
+	final private String dbLocation = "jdbc:sqlite::memory:inMemoryDb";
 
-	private DataSource dataSource;
-	private String dbLocation = "jdbc:sqlite::memory:memdb1";//"jdbc:sqlite::memory:memdb1?cache=shared";
-	public UserDbUtil(DataSource theDataSource) {
-		dataSource = theDataSource;
+	/**
+	 * UserDbUtil constructor
+	 */
+	public UserDbUtil() {
 	}
 
-	public void setupDb(){
+	/**
+	 * Sets up connection to the DB and creates the "user" table.
+	 */
+	public void setupDb() {
 		Connection connection = null;
 		Statement statement = null;
-		ResultSet result = null;
-		
+
 		try {
-			// get a connection and create a memory db
+			// Get a connection and create SQLite DB
 			Class.forName("org.sqlite.JDBC");
 			connection = DriverManager.getConnection(dbLocation);
 			statement = connection.createStatement();
-			// Do some updates
-			String sql = "CREATE TABLE user ( " +
-					"id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
-					"first_name TEXT NOT NULL," +
-					"last_name TEXT NOT NULL," +
-					"age INTEGER NOT NULL);";
-			int res = statement.executeUpdate(sql);
-			
+			// Create the table User and setup DB schema.
+			String sql = "CREATE TABLE user ( " + "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
+					+ "first_name TEXT NOT NULL," + "last_name TEXT NOT NULL," + "age INTEGER NOT NULL);";
+			statement.executeUpdate(sql);
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			if (!e.getMessage().contains("table user already exists")){
+			// Handle exception if the table already exists.
+			if (!e.getMessage().contains("table user already exists")) {
 				e.printStackTrace();
 			}
-			
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		finally {
-				// close JDBC objects
-				close(connection, statement, null);
+		} finally {
+			// Close JDBC objects
+			close(connection, statement, null);
 		}
 	}
 
-	public List<Person> getUsers() throws Exception {
+	/**
+	 * Retrieves all the users from the DB.
+	 * 
+	 * @return List of users sorted by last name.
+	 * @throws Exception
+	 */
+	public List<DbUser> getUsers() throws Exception {
 
-		List<Person> users = new ArrayList<>();
-
+		List<DbUser> users = new ArrayList<>();
+		// JDBC objects
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet result = null;
 
 		try {
-			// get a connection
-			// myConn = dataSource.getConnection();
+			// Get a connection
 			Class.forName("org.sqlite.JDBC");
-			//connection = DriverManager.getConnection("jdbc:sqlite::memory:");
 			connection = DriverManager.getConnection(dbLocation);
-			// create the db
 
-			// create sql statement
+			// Create an SQL statement
 			String sql = "select * from user order by last_name";
-
 			statement = connection.createStatement();
 
-			// execute query
+			// Execute SQL query
 			result = statement.executeQuery(sql);
 
-			// process result set
+			// Process the result returned from the query
 			while (result.next()) {
 
-				// retrieve data from result set row
+				// Retrieve data from result set row
 				int id = result.getInt("id");
 				String firstName = result.getString("first_name");
 				String lastName = result.getString("last_name");
 				int age = result.getInt("age");
 
-				// create new user object
-				Person tempStudent = new Person(id, firstName, lastName, age);
+				// Create new DBUser object
+				DbUser tempUser = new DbUser(id, firstName, lastName, age);
 
-				// add it to the list of users
-				users.add(tempStudent);
+				// Add it to the list of users
+				users.add(tempUser);
 			}
 
+			// Return the list of users
 			return users;
 		} finally {
-			// close JDBC objects
+			// Close JDBC objects
 			close(connection, statement, result);
 		}
 	}
 
+	/**
+	 * Auxiliary function to close JDBC objects.
+	 * 
+	 * @param connection
+	 * @param statement
+	 * @param result
+	 */
 	private void close(Connection connection, Statement statement, ResultSet result) {
 
 		try {
@@ -111,46 +122,61 @@ public class UserDbUtil {
 			}
 
 			if (connection != null) {
-				connection.close(); // doesn't really close it ... just puts back in
-								// connection pool
+				connection.close();
 			}
+
 		} catch (Exception exc) {
 			exc.printStackTrace();
 		}
 	}
 
-	public void addStudent(Person theUser) throws Exception {
+	/**
+	 * Adds the DBUser object to the DataBase.
+	 * 
+	 * @param addedUser
+	 * @throws Exception
+	 */
+	public void addUser(DbUser addedUser) throws Exception {
 
 		Connection connection = null;
 		PreparedStatement statement = null;
 
 		try {
-			// get db connection
+			// Get DB connection
 			Class.forName("org.sqlite.JDBC");
-			//connection = DriverManager.getConnection("jdbc:sqlite::memory:");
 			connection = DriverManager.getConnection(dbLocation);
-			
-			// create sql for insert
+			System.out.println("DB: About to add user.");
+			// Create SQL statement for insert
 			String sql = "insert into user " + "(first_name, last_name, age) " + "values (?, ?, ?)";
-
 			statement = connection.prepareStatement(sql);
+			System.out.println("DB: Insering User");
+			// Set the parameter values for the DBUser
+			if (addedUser.getFirstName() != null && addedUser.getLastName() != null && addedUser.getAge() >= 0) {
+				statement.setString(1, addedUser.getFirstName());
+				statement.setString(2, addedUser.getLastName());
+				statement.setInt(3, addedUser.getAge());
 
-			// set the param values for the user
-			statement.setString(1, theUser.getFirstName());
-			statement.setString(2, theUser.getLastName());
-			statement.setInt(3, theUser.getAge());
-
-			// execute sql insert
-			statement.execute();
+				// Execute SQL insert
+				statement.execute();
+				System.out.println("DB: Added User.");
+			}
 		} finally {
-			// clean up JDBC objects
+			// Clean up JDBC objects
 			close(connection, statement, null);
 		}
 	}
 
-	public Person getUser(String theUserId) throws Exception {
+	/**
+	 * Reads user from the DataBase by user ID.
+	 * 
+	 * @param inUserId
+	 * @return DBUser object with values from the DataBase for the provided user
+	 *         ID.
+	 * @throws Exception
+	 */
+	public DbUser getUser(String inUserId) throws Exception {
 
-		Person theUser = null;
+		DbUser dbUser = null;
 
 		Connection connection = null;
 		PreparedStatement statement = null;
@@ -158,104 +184,112 @@ public class UserDbUtil {
 		int userId;
 
 		try {
-			// convert user id to int
-			System.out.println(theUserId);
-			userId = Integer.parseInt(theUserId);
+			// Convert user ID to int
+			userId = Integer.parseInt(inUserId);
 
+			// Create DB connection
 			Class.forName("org.sqlite.JDBC");
-			//connection = DriverManager.getConnection("jdbc:sqlite::memory:");
 			connection = DriverManager.getConnection(dbLocation);
-			
-			// create sql to get selected user
+
+			// Create SQL statement to get the user by userId.
 			String sql = "select * from user where id=?";
 
-			// create prepared statement
+			// Create prepared statement
 			statement = connection.prepareStatement(sql);
 
-			// set params
+			// Set SQL parameters
 			statement.setInt(1, userId);
 
-			// execute statement
+			// Execute SQL statement
 			result = statement.executeQuery();
 
-			// retrieve data from result set row
+			// Retrieve data from result set row
 			if (result.next()) {
 				String firstName = result.getString("first_name");
 				String lastName = result.getString("last_name");
 				int age = result.getInt("age");
 
 				// use the userId during construction
-				theUser = new Person(userId, firstName, lastName, age);
+				dbUser = new DbUser(userId, firstName, lastName, age);
 			} else {
 				throw new Exception("Could not find user id: " + userId);
 			}
 
-			return theUser;
+			return dbUser;
 		} finally {
 			// clean up JDBC objects
 			close(connection, statement, result);
 		}
 	}
 
-	public void updateUsert(Person theUser) throws Exception {
+	/**
+	 * Updates user in the DataBase with new DbUser object.
+	 * 
+	 * @param dbUser
+	 * @throws Exception
+	 */
+	public void updateUser(DbUser dbUser) throws Exception {
 
 		Connection connection = null;
 		PreparedStatement statement = null;
 
 		try {
-			// get db connection
+			// Get DataBase connection
 			Class.forName("org.sqlite.JDBC");
-			//connection = DriverManager.getConnection("jdbc:sqlite::memory:");
 			connection = DriverManager.getConnection(dbLocation);
-			
 
-			// create SQL update statement
+			// Create SQL update statement
 			String sql = "update user " + "set first_name=?, last_name=?, age=? " + "where id=?";
 
-			// prepare statement
+			// Prepare SQL statement
 			statement = connection.prepareStatement(sql);
 
-			// set params
-			statement.setString(1, theUser.getFirstName());
-			statement.setString(2, theUser.getLastName());
-			statement.setInt(3, theUser.getAge());
-			statement.setInt(4, theUser.getId());
+			// Set SQL parameters
+			statement.setString(1, dbUser.getFirstName());
+			statement.setString(2, dbUser.getLastName());
+			statement.setInt(3, dbUser.getAge());
+			statement.setInt(4, dbUser.getId());
 
-			// execute SQL statement
+			// Execute SQL statement
 			statement.execute();
 		} finally {
-			// clean up JDBC objects
+			// Clean up JDBC objects
 			close(connection, statement, null);
 		}
 	}
 
-	public void deleteUser(String theUserId) throws Exception {
+	/**
+	 * Deletes from the DataBase by user ID.
+	 * 
+	 * @param dbUserId
+	 * @throws Exception
+	 */
+
+	public void deleteUser(String dbUserId) throws Exception {
 
 		Connection connection = null;
 		PreparedStatement statement = null;
 
 		try {
-			// convert user id to int
-			int userId = Integer.parseInt(theUserId);
+			// Convert userID from String to int
+			int userId = Integer.parseInt(dbUserId);
 
-			// get connection to database
+			// Get connection to DataBase
 			Class.forName("org.sqlite.JDBC");
-			//connection = DriverManager.getConnection("jdbc:sqlite::memory:");
 			connection = DriverManager.getConnection(dbLocation);
-			
-			// create sql to delete user
+
+			// Create SQL statement to delete user
 			String sql = "delete from user where id=?";
 
-			// prepare statement
 			statement = connection.prepareStatement(sql);
 
-			// set params
+			// Set ID parameter
 			statement.setInt(1, userId);
 
-			// execute sql statement
+			// Execute SQL statement
 			statement.execute();
 		} finally {
-			// clean up JDBC code
+			// Clean up JDBC code
 			close(connection, statement, null);
 		}
 	}

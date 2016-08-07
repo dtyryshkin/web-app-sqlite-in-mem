@@ -4,13 +4,13 @@
 <head>
 	<title>Update User</title>
 
-	
+	<link rel="stylesheet" type="text/css" href="css/user-style.css">
 </head>
 
 <body>
 	<div id="wrapper">
 		<div id="header">
-			<h2>DimitriT's list of Users</h2>
+			<h2>Update User Information</h2>
 		</div>
 	</div>
 	
@@ -21,26 +21,26 @@
 		
 			<input type="hidden" name="command" value="UPDATE" />
 
-			<input type="hidden" name="userId" value="${THE_USER.id}" />
+			<input type="hidden" name="userId" value="${DB_USER.id}" />
 			
 			<table>
 				<tbody>
 					<tr>
 						<td><label>First name:</label></td>
 						<td><input type="text" name="firstName" 
-								   value="${THE_USER.firstName}" /></td>
+								   value="${DB_USER.firstName}" /></td>
 					</tr>
 
 					<tr>
 						<td><label>Last name:</label></td>
 						<td><input type="text" name="lastName" 
-								   value="${THE_USER.lastName}" /></td>
+								   value="${DB_USER.lastName}" /></td>
 					</tr>
 
 					<tr>
 						<td><label>Age:</label></td>
 						<td><input type="number" name="age" 
-								   value="${THE_USER.age}" /></td>
+								   value="${DB_USER.age}" /></td>
 					</tr>
 					
 					<tr>
